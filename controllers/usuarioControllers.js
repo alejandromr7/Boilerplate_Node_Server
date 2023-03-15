@@ -1,6 +1,5 @@
 const Usuario = require("../models/Usuario")
 const bcrypt = require('bcrypt');
-const generarId = require("../helpers/generarId");
 const generarJWT = require("../helpers/generarJWT");
 
 const registrar = async (req, res) => {
@@ -25,7 +24,7 @@ const registrar = async (req, res) => {
 const autenticar = async (req, res) => {
     const { email, password } = req.body;
 
-    // Comprobar si el usuario existe //
+    d
     const usuario = await Usuario.findOne({ where: { email } });
 
     if (!usuario) {
@@ -57,4 +56,25 @@ const autenticar = async (req, res) => {
 
 }
 
-module.exports = { registrar, autenticar }
+const confirmar = async (req, res) => {
+    const { token } = req.params;
+
+    //* Comprobar si el token es valido *//
+    const usuarioConfirmar = await Usuario.findOne({ where: { token } });
+
+    if (!usuarioConfirmar) {
+        const error = new Error('Token no válido!');
+        return res.status(403).json({ msg: error.message, error: true });
+    }
+
+    try {
+        usuarioConfirmar.confirmar = true;
+        usuarioConfirmar.token = '';
+        await usuarioConfirmar.save();
+        res.json({ msg: 'Cuenta confirmada correctamente', error: false });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+module.exports = { registrar, autenticar, confirmar }
