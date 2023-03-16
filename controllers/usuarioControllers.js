@@ -2,6 +2,7 @@ const Usuario = require("../models/Usuario")
 const bcrypt = require('bcrypt');
 const generarJWT = require("../helpers/generarJWT");
 const generarId = require("../helpers/generarId");
+const encryptarPassword = require("../helpers/hashearPassword");
 
 const registrar = async (req, res) => {
     const { email } = req.body;
@@ -96,4 +97,43 @@ const olvidePassword = async (req, res) => {
 
 }
 
-module.exports = { registrar, autenticar, confirmar, olvidePassword }
+const comprobarToken = async (req, res) => {
+    const { token } = req.params;
+
+    //* Comprobar si el token es valido *//
+    const tokenValido = await Usuario.findOne({ where: { token } });
+
+    if (!tokenValido) {
+        const error = new Error('Token no válido!');
+        return res.status(403).json({ msg: error.message, error: true });
+    }
+
+    res.json({ msg: 'Token válido y el usuario existe!', error: false });
+}
+
+
+const nuevoPassword = async (req, res) => {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    //* Comprobar si el token es valido *//
+    const usuario = await Usuario.findOne({ where: { token } });
+
+    if (!usuario) {
+        const error = new Error('Token no válido!');
+        return res.status(403).json({ msg: error.message, error: true });
+    }
+
+    try {
+        usuario.password = encryptarPassword(password);
+        usuario.token = '';
+        await usuario.save();
+        res.json({ msg: 'Contraseña actualizada correctamente.', error: false });
+    } catch (error) {
+        console.log(error);
+    }
+
+
+}
+
+module.exports = { registrar, autenticar, confirmar, olvidePassword, comprobarToken, nuevoPassword }
