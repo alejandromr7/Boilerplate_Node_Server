@@ -1,6 +1,7 @@
 const Usuario = require("../models/Usuario")
 const bcrypt = require('bcrypt');
 const generarJWT = require("../helpers/generarJWT");
+const generarId = require("../helpers/generarId");
 
 const registrar = async (req, res) => {
     const { email } = req.body;
@@ -24,7 +25,6 @@ const registrar = async (req, res) => {
 const autenticar = async (req, res) => {
     const { email, password } = req.body;
 
-    d
     const usuario = await Usuario.findOne({ where: { email } });
 
     if (!usuario) {
@@ -40,7 +40,6 @@ const autenticar = async (req, res) => {
 
     // Comprobar su password //
     const compararPassword = await bcrypt.compare(password, usuario.password);
-    console.log(compararPassword);
 
     if (!compararPassword) {
         const error = new Error('Contraseña incorrecta!');
@@ -77,4 +76,24 @@ const confirmar = async (req, res) => {
     }
 }
 
-module.exports = { registrar, autenticar, confirmar }
+const olvidePassword = async (req, res) => {
+    const { email } = req.body;
+
+    const usuario = await Usuario.findOne({ where: { email } });
+
+    if (!usuario) {
+        const error = new Error('El usuario no existe!');
+        return res.status(404).json({ msg: error.message, error: true });
+    }
+
+    try {
+        usuario.token = generarId();
+        await usuario.save();
+        res.json({ msg: 'Hemos enviado un email con las instrucciones', error: false });
+    } catch (error) {
+        console.log(error);
+    }
+
+}
+
+module.exports = { registrar, autenticar, confirmar, olvidePassword }
