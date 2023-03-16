@@ -17,6 +17,7 @@ class Server {
     async dbConnection() {
         try {
             require('./models/Usuario');
+            require('./models/Proyecto');
             await db.sync();
             console.log('Connection has been established successfully.');
         } catch (error) {
@@ -32,6 +33,7 @@ class Server {
 
     routes() {
         this.app.use('/api/usuarios', require('./routes/usuarioRoutes'));
+        this.app.use('/api/proyectos', require('./routes/proyectoRoutes'));
     }
 
     listen() {
