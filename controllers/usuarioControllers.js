@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const generarJWT = require("../helpers/generarJWT");
 const generarId = require("../helpers/generarId");
 const encryptarPassword = require("../helpers/hashearPassword");
+const { emailRegistro, emailOlvidePassword } = require("../helpers/emails");
 
 const registrar = async (req, res) => {
     const { email } = req.body;
@@ -15,8 +16,15 @@ const registrar = async (req, res) => {
     }
 
     try {
-        await Usuario.create(req.body);
-        res.json({ msg: 'Usuario registrado correctamente', error: false });
+        const usuario = await Usuario.create(req.body);
+
+        emailRegistro({
+            nombre: usuario.nombre,
+            email: usuario.email,
+            token: usuario.token
+        });
+
+        res.json({ msg: 'Usuario registrado correctamente, Revisa tu Email para confirmar tu cúenta', error: false });
     } catch (error) {
         console.log(error);
     }
@@ -84,13 +92,18 @@ const olvidePassword = async (req, res) => {
 
     if (!usuario) {
         const error = new Error('El usuario no existe!');
-        return res.status(404).json({ msg: error.message, error: true });
+        return res.status(404).json({ msg: error.message });
     }
 
     try {
         usuario.token = generarId();
         await usuario.save();
-        res.json({ msg: 'Hemos enviado un email con las instrucciones', error: false });
+        await emailOlvidePassword({
+            nombre: usuario.nombre,
+            email: usuario.email,
+            token: usuario.token
+        });
+        res.json({ msg: 'Hemos enviado un email con las instrucciones' });
     } catch (error) {
         console.log(error);
     }

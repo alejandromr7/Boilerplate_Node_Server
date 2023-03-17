@@ -1,4 +1,5 @@
 const Proyecto = require("../models/Proyecto");
+const Tarea = require("../models/Tarea");
 
 
 const obtenerProyectos = async (req, res) => {
@@ -39,7 +40,10 @@ const obtenerProyecto = async (req, res) => {
         return res.status(401).json({ msg: error.message, error: true });
     }
 
-    res.json(proyecto);
+    // Obtener tareas del proyecto //
+    const tareas = await Tarea.findAll({ where: { proyectoId: proyecto.id } });
+
+    res.json({ proyecto, tareas });
 }
 
 const editarProyecto = async (req, res) => {
@@ -97,8 +101,4 @@ const eliminarColaborador = async (req, res) => {
 
 }
 
-const obtenerTareas = async (req, res) => {
-
-}
-
-module.exports = { obtenerProyectos, obtenerProyecto, nuevoProyecto, editarProyecto, eliminarProyecto, agregarColaborador, eliminarColaborador, obtenerTareas }
+module.exports = { obtenerProyectos, obtenerProyecto, nuevoProyecto, editarProyecto, eliminarProyecto, agregarColaborador, eliminarColaborador }

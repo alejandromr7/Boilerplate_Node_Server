@@ -18,6 +18,7 @@ class Server {
         try {
             require('./models/Usuario');
             require('./models/Proyecto');
+            require('./models/Tarea');
             await db.sync();
             console.log('Connection has been established successfully.');
         } catch (error) {
@@ -26,14 +27,15 @@ class Server {
     }
 
     middlewares() {
+        this.app.use(cors());
         this.app.use(express.json());
         this.app.use(express.static('public'));
-        this.app.use(express(cors()));
     }
 
     routes() {
         this.app.use('/api/usuarios', require('./routes/usuarioRoutes'));
         this.app.use('/api/proyectos', require('./routes/proyectoRoutes'));
+        this.app.use('/api/tareas', require('./routes/tareaRoutes'));
     }
 
     listen() {
