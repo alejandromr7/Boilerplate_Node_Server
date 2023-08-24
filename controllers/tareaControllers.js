@@ -22,7 +22,8 @@ const agregarTarea = async (req, res) => {
 
 
     try {
-        const tareaAlmacenada = await Tarea.create(req.body);
+        const { nombre, descripcion, fechaEntrega, prioridad, cliente } = req.body;
+        const tareaAlmacenada = await Tarea.create({ nombre, descripcion, fechaEntrega, prioridad, cliente, proyectoId });
         res.json(tareaAlmacenada);
     } catch (error) {
         console.log(error);

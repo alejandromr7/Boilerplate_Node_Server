@@ -32,6 +32,11 @@ const Usuario = db.define('usuarios', {
         defaultValue: generarId()
     },
 
+    intentos: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0
+    },
+
     confirmar: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,

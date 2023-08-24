@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
+const { confirmar } = require('../controllers/usuarioControllers');
 
 const checkAuth = async (req, res, next) => {
     let token;
@@ -16,6 +17,7 @@ const checkAuth = async (req, res, next) => {
                 id: respuesta.id,
                 nombre: respuesta.nombre,
                 email: respuesta.email,
+                confirmar: respuesta.confirmar
             }
 
             return next();

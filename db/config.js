@@ -9,8 +9,8 @@ const db = new Sequelize(process.env.DB, process.env.USER, process.env.PASSWORD,
     },
 
     logging: false,
-    native: true,
-    ssl: true,
+    // native: true,
+    // ssl: true,
 });
 
 module.exports = db;

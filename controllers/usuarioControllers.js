@@ -4,6 +4,8 @@ const generarJWT = require("../helpers/generarJWT");
 const generarId = require("../helpers/generarId");
 const encryptarPassword = require("../helpers/hashearPassword");
 const { emailRegistro, emailOlvidePassword } = require("../helpers/emails");
+const { googleVerify } = require("../helpers/google-verify");
+const { json } = require("sequelize");
 
 const registrar = async (req, res) => {
     const { email } = req.body;
@@ -50,10 +52,21 @@ const autenticar = async (req, res) => {
     // Comprobar su password //
     const compararPassword = await bcrypt.compare(password, usuario.password);
 
+    if (usuario.intentos >= 3) {
+        const error = new Error('Tu cuentas ha sido bloqueada, Has intentado acceder más de 3 veces!');
+        return res.status(401).json({ msg: error.message, error: true });
+    }
+
     if (!compararPassword) {
+        usuario.intentos += 1;
+        await usuario.save();
         const error = new Error('Contraseña incorrecta!');
         return res.status(403).json({ msg: error.message, error: true });
     }
+
+    usuario.intentos = 0;
+    await usuario.save();
+
 
     res.json({
         id: usuario.id,
@@ -155,4 +168,132 @@ const perfil = async (req, res) => {
     res.json(usuario);
 }
 
-module.exports = { registrar, autenticar, confirmar, olvidePassword, comprobarToken, nuevoPassword, perfil }
+
+const googleSingIn = async (req, res) => {
+
+    const { id_token } = req.body;
+
+    try {
+        const { nombre, img, correo } = await googleVerify(id_token);
+
+        let usuario = await Usuario.findOne({ where: { email: correo } });
+
+        if (!usuario) {
+
+            const data = {
+                nombre,
+                email: correo,
+                password: '',
+                token: '',
+                confirmar: true
+            }
+
+            const usuarioDB = await Usuario.create(data);
+            console.log(usuarioDB);
+
+            return
+        }
+
+        res.json({
+            id: usuario.id,
+            nombre: usuario.nombre,
+            email: usuario.email,
+            img,
+            token: generarJWT(usuario.id)
+        });
+
+    } catch (error) {
+        res.status(400).json({ msg: 'El token no se pudo verificar' });
+    }
+
+}
+
+
+const actualizarPerfil = async (req, res) => {
+    const { id } = req.params;
+    const body = req.body;
+
+    const usuario = await Usuario.findByPk(id);
+
+    if (!usuario) {
+        const error = new Error('El usuario no existe!');
+        return res.status(404).json({ msg: error.message, error: true });
+    }
+
+    const { email } = req.body;
+
+    if (usuario.email !== req.body.email) {
+        const existeEmail = await Usuario.findOne({ where: { email } });
+
+        if (existeEmail) {
+            const error = new Error('Este email ya se encuentra registrado!');
+            return res.status(400).json({ msg: error.message, error: true });
+        }
+    }
+
+    try {
+        usuario.nombre = body.nombre || usuario.nombre;
+        usuario.email = body.email || usuario.email;
+        const usuarioActualizado = await usuario.save();
+
+        res.json({
+            id: usuarioActualizado.id,
+            nombre: usuarioActualizado.nombre,
+            email: usuarioActualizado.email
+        });
+    } catch (error) {
+        console.log(error);
+    }
+
+}
+
+
+const actualizarPassword = async (req, res) => {
+    const { id } = req.usuario;
+    const { pwd_actual, pwd_nuevo } = req.body;
+
+    const usuario = await Usuario.findByPk(id);
+
+    if (!usuario) {
+        const error = new Error('El usuario no existe!');
+        return res.status(404).json({ msg: error.message, error: true });
+    }
+
+    // Comprobar su password //
+    const compararPassword = await bcrypt.compare(pwd_actual, usuario.password);
+
+    if (!compararPassword) {
+        const error = new Error('Contraseña incorrecta!');
+        return res.status(403).json({ msg: error.message, error: true });
+    }
+
+    usuario.password = encryptarPassword(pwd_nuevo);
+    await usuario.save();
+
+    res.json({ msg: 'Contraseña actualizada correctamente!', error: false });
+
+}
+
+const activarDesactivarCuenta = async (req, res) => {
+    const { id } = req.usuario;
+
+    const usuario = await Usuario.findByPk(id);
+
+    if (!usuario) {
+        const error = new Error('El usuario no existe!');
+        return res.status(404).json({ msg: error.message, error: true });
+    }
+
+    if (usuario.confirmar) {
+        usuario.confirmar = false;
+    } else {
+        usuario.confirmar = true;
+    }
+
+    usuario.save();
+    console.log(usuario.confirmar)
+    res.json({ msg: usuario.confirmar });
+}
+
+
+module.exports = { registrar, autenticar, confirmar, olvidePassword, comprobarToken, nuevoPassword, perfil, googleSingIn, actualizarPerfil, actualizarPassword, activarDesactivarCuenta }

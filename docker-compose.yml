@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  web:
+    container_name: myapp
+    restart: always
+    build: .
+    ports:
+      - "4000:4000"
+    links:
+      - postgres_db
+    volumes:
+      - .:/usr/src/app
+    environment:
+      - PORT=4000
+      - HOST=postgres_db
+      - USER=alex
+      - PASSWORD=ok
+      - DB=uptask
+      - DIALECT=postgres
+      - JWT_SECRET_WORD=playwithmyboops
+      - FRONTED_URL=http://192.168.0.7:3000
+      - EMAIL_USER=alejandro.proyectos00@gmail.com
+      - EMAIL_PASS=eauyqesbpdvguspb
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=465
+      - GOOGLE_CLIENT_ID=262981674390-qimgq66nmvi0fbepb7klnpebdlucop57.apps.googleusercontent.com
+      - GOOGLE_SECRET_ID=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
+
+  postgres_db:
+    image: 'postgres:latest'
+    restart: always
+    volumes:
+      - 'postgres_volume:/var/lib/postgresql/data'
+    environment:
+      - POSTGRES_USER=alex
+      - POSTGRES_PASSWORD=ok
+    ports:
+      - '5432:5432'
+
+volumes:
+  postgres_volume:
+    # This must match the name of the external volume
+    external: true # Indicates that this is an external volume

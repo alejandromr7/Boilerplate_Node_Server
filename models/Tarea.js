@@ -31,6 +31,6 @@ const Tarea = db.define('tareas', {
 });
 
 //Tarea.belongsTo(Proyecto)
-Proyecto.hasMany(Tarea);
+Proyecto.hasMany(Tarea, { onDelete: 'cascade', hooks: true });
 
 module.exports = Tarea;

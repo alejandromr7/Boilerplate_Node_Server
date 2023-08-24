@@ -18,14 +18,11 @@ const Proyecto = db.define('proyectos', {
 
     descripcion: Sequelize.STRING,
 
-    fechaEntrega: {
-        type: Sequelize.STRING,
-        defaultValue: fechaActual()
-    },
+    fechaEntrega: Sequelize.DATEONLY,
 
     cliente: Sequelize.STRING
 });
 
-Usuario.hasMany(Proyecto);
+Usuario.hasMany(Proyecto, { onDelete: 'cascade', hooks: true });
 
 module.exports = Proyecto;
