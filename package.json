@@ -26,6 +26,8 @@
     "sequelize": "^6.28.0",
     "socker.io": "^0.0.0-alpha-beta",
     "socket.io": "^4.6.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
     "tedious": "^15.1.2"
   },
   "devDependencies": {

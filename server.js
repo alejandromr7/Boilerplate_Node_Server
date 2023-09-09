@@ -3,7 +3,52 @@ const cors = require('cors');
 const { Server } = require("socket.io");
 const db = require('./db/config');
 var ip = require('ip');
-var path = require('path');
+const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const swaggerJSDoc = require('swagger-jsdoc');
+
+
+const options = {
+    definition: {
+        openapi: "3.1.0",
+        info: {
+            title: "Expense Tracker",
+            version: "0.1.0",
+            description:
+                "This is a simple CRUD API application made with Express and documented with Swagger",
+            license: {
+                name: "MIT",
+                url: "https://spdx.org/licenses/MIT.html",
+            },
+            contact: {
+                name: "Expense Tracker",
+                url: "https://logrocket.com",
+                email: "info@email.com",
+            },
+        },
+        servers: [
+            {
+                url: "http://localhost:9000",
+            },
+        ],
+    },
+    apis: [`${path.join(__dirname, './routes/*.js')}`]
+};
+
+const swaggerSpec = swaggerJSDoc(options);
+
+// const swaggerSpect = {
+//     definition: {
+//         openapi: '3.0.0',
+//         info: {
+//             title: 'Node Postgress API',
+//             version: '1.0'
+//         }
+//     },
+//     servers: [
+//         { url: 'http://localhost:9000/api', description: 'http://localhost:9000/api' }
+//     ]
+// }
 
 class Servidor {
     constructor() {
@@ -21,8 +66,7 @@ class Servidor {
     async dbConnection() {
         try {
             require('./models/Usuario');
-            require('./models/Proyecto');
-            require('./models/Tarea');
+            require('./models/Gasto');
             await db.sync();
             console.log('Connection has been established successfully.');
         } catch (error) {
@@ -31,6 +75,7 @@ class Servidor {
     }
 
     middlewares() {
+        this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
         this.app.use(cors());
         this.app.use(express.json());
         this.app.use(express.static('public'));
@@ -38,8 +83,7 @@ class Servidor {
 
     routes() {
         this.app.use('/api/usuarios', require('./routes/usuarioRoutes'));
-        this.app.use('/api/proyectos', require('./routes/proyectoRoutes'));
-        this.app.use('/api/tareas', require('./routes/tareaRoutes'));
+        this.app.use('/api/gastos', require('./routes/gastoRoutes'));
 
 
         this.app.get('*', (req, res) => {

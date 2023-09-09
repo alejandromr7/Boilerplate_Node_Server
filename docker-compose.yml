@@ -1,6 +1,24 @@
 version: '3'
 
 services:
+  postgres_db:
+    image: 'postgres:latest'
+    restart: always
+    volumes:
+      - './postgres:/var/lib/postgresql/data'
+    environment:
+      - POSTGRES_USER=alex
+      - POSTGRES_PASSWORD=ok
+      - POSTGRES_DB=uptask
+      - POSTGRES_DATABASE=uptask
+    ports:
+      - '5432:5432'
+    # healthcheck:
+    #   test: [ "CMD-SHELL", "pg_isready -U alex" ]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 3
+
   web:
     container_name: myapp
     restart: always
@@ -26,19 +44,10 @@ services:
       - EMAIL_PORT=465
       - GOOGLE_CLIENT_ID=262981674390-qimgq66nmvi0fbepb7klnpebdlucop57.apps.googleusercontent.com
       - GOOGLE_SECRET_ID=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
+    depends_on:
+      - postgres_db # Service B depends on Service A
 
-  postgres_db:
-    image: 'postgres:latest'
-    restart: always
-    volumes:
-      - 'postgres_volume:/var/lib/postgresql/data'
-    environment:
-      - POSTGRES_USER=alex
-      - POSTGRES_PASSWORD=ok
-    ports:
-      - '5432:5432'
-
-volumes:
-  postgres_volume:
-    # This must match the name of the external volume
-    external: true # Indicates that this is an external volume
+# volumes:
+#   postgres_volume:
+#     # This must match the name of the external volume
+#     external: true # Indicates that this is an external volume
